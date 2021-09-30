@@ -275,13 +275,38 @@ std::vector<std::vector<std::string>> E_course::parse_schedule()
   return schedule;
 }
 
-void E_course::parse_xml(std::vector<std::vector<std::string>> &schedule, std::vector<std::vector<std::string>> &users, int count_users, int *bool_look)
+void E_course::save_heads_json(QString name, std::vector<std::vector<std::string>> &heads)
+{
+      QString time_buf_for_time;
+      QJsonObject name_user;
+      QJsonArray arr_heads;
+      QJsonObject Obj_heads;
+      QJsonObject m_currentJsonObject;
+
+      // Создаём объект файла и открываем его на запись
+      QFile jsonFile(path_directory + "//users//" + name + ".json");
+      if (jsonFile.open(QIODevice::WriteOnly))
+      {
+
+          for(size_t i = 0; i < heads.size(); i++)
+          {
+              Obj_heads[QString::fromStdString(heads[i][0])] = QString::fromStdString(heads[i][1]);
+          }
+          arr_heads.append(Obj_heads);
+          m_currentJsonObject[name] = arr_heads;
+
+      }
+
+      // Записываем текущий объект Json в файл
+      jsonFile.write(QJsonDocument(m_currentJsonObject).toJson(QJsonDocument::Indented));
+      jsonFile.close();   // Закрываем файл
+}
+
+void E_course::parse_xml(std::vector<std::vector<std::string>> &schedule, std::vector<std::vector<std::string>> &users, int count_users)
 {
     for(int i=0; i < count_users; i++)
          if(autorisate(users[i][0], users[i][1]))
              {
-                 QDir dir;
-
                  CURL* curl_handle_cookie;
                  curl_handle_cookie = curl_easy_init();
                  std::ofstream xmlfile(path_directory.toStdString() + "//xmlfile.txt");;
@@ -299,6 +324,7 @@ void E_course::parse_xml(std::vector<std::vector<std::string>> &schedule, std::v
                      //curl_easy_cleanup(curl_handle_cookie);
                      std::vector<std::vector<std::string>> heads = parse_schedule();
                      find_head(curl_handle_cookie, heads);
+                     save_heads_json(QString::fromStdString(users[i][0]), heads);
 
                   }
              }
@@ -359,7 +385,9 @@ void E_course::start()
     std::vector<std::vector<std::string>> users;
     std::vector<std::string> vec {"DGlebov-KI20","Digit321" };
     users.push_back(vec);
-    parse_xml(schedule, users, 1, 0);
+    vec = {"BKoychubaev-KI20", "bayche0305"};
+    users.push_back(vec);
+    parse_xml(schedule, users, 2);
 }
 
 
